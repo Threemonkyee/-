@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   TrendingUp, 
@@ -48,6 +49,8 @@ const StatCard: React.FC<{ title: string; value: string; trend: string; isUp: bo
 );
 
 const Dashboard: React.FC<{ user: User; campaigns: Campaign[]; opportunities: Opportunity[] }> = ({ user, campaigns, opportunities }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -99,7 +102,11 @@ const Dashboard: React.FC<{ user: User; campaigns: Campaign[]; opportunities: Op
           <h3 className="text-lg font-bold text-slate-800 mb-6">高潜HCP (Top 5)</h3>
           <div className="space-y-4">
             {MOCK_HCPS.slice(0, 5).map((hcp, idx) => (
-              <div key={hcp.id} className="flex items-center space-x-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group cursor-pointer">
+              <div 
+                key={hcp.id} 
+                onClick={() => navigate(`/sales?hcpId=${hcp.id}`)}
+                className="flex items-center space-x-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group cursor-pointer border border-transparent hover:border-slate-100"
+              >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm`} style={{ backgroundColor: COLORS[idx % COLORS.length] }}>
                   {hcp.name[0]}
                 </div>
@@ -116,7 +123,10 @@ const Dashboard: React.FC<{ user: User; campaigns: Campaign[]; opportunities: Op
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center space-x-2">
+          <button 
+            onClick={() => navigate('/hcp')}
+            className="w-full mt-6 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center space-x-2"
+          >
             <span>查看全部客户</span>
             <ChevronRight size={16} />
           </button>

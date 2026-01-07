@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreVertical, MapPin, Building2, Stethoscope, TrendingUp } from 'lucide-react';
-import { HCP, HCPLevel } from '../types';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Filter, MoreVertical, Building2, Stethoscope, TrendingUp, ChevronRight } from 'lucide-react';
+import { HCP } from '../types';
 import { MOCK_HCPS, MOCK_OPPORTUNITIES } from '../constants';
 
 const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<string>('ALL');
+  const navigate = useNavigate();
 
   const filteredHCPS = MOCK_HCPS.filter(hcp => {
     const matchesSearch = hcp.name.includes(searchTerm) || hcp.hospital.includes(searchTerm);
@@ -14,7 +16,6 @@ const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
     return matchesSearch && matchesFilter;
   });
 
-  // 检查医生是否有进行中的销售机会
   const getOpportunityCount = (hcpId: string) => {
     return MOCK_OPPORTUNITIES.filter(o => o.hcpId === hcpId && o.stage !== '成交').length;
   };
@@ -55,9 +56,6 @@ const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
               <option value="B">B 级 (潜力)</option>
               <option value="C">C 级 (普通)</option>
             </select>
-            <button className="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100">
-              <Filter size={20} />
-            </button>
           </div>
         </div>
 
@@ -108,16 +106,20 @@ const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
                     </td>
                     <td className="px-6 py-4">
                       {optCount > 0 ? (
-                        <div className="flex items-center text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-lg w-fit">
+                        <button 
+                          onClick={() => navigate(`/sales?hcpId=${hcp.id}`)}
+                          className="flex items-center text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1.5 rounded-lg w-fit hover:bg-emerald-100 transition-all group/btn"
+                        >
                           <TrendingUp size={12} className="mr-1" />
-                          {optCount} 个活跃机会
-                        </div>
+                          <span>{optCount} 个活跃机会</span>
+                          <ChevronRight size={12} className="ml-1 opacity-0 group-hover/btn:opacity-100 -translate-x-1 group-hover/btn:translate-x-0 transition-all" />
+                        </button>
                       ) : (
-                        <span className="text-slate-300 text-xs">暂无机会</span>
+                        <span className="text-slate-300 text-xs">暂无活跃机会</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600">{hcp.lastVisit}</span>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {hcp.lastVisit}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
