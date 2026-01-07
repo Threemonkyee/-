@@ -1,19 +1,32 @@
 
-import React, { useState } from 'react';
-import { ShieldCheck, UserCheck, AlertCircle, FileText, CheckCircle, XCircle } from 'lucide-react';
+import React from 'react';
+import { ShieldCheck, UserCheck, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { Campaign, CampaignStatus, UserRole } from '../types';
-import { MOCK_CAMPAIGNS } from '../constants';
 
-const ApprovalWorkflow: React.FC<{ user: any }> = ({ user }) => {
-  const [items, setItems] = useState<Campaign[]>(MOCK_CAMPAIGNS.filter(c => 
+interface ApprovalWorkflowProps {
+  user: any;
+  campaigns: Campaign[];
+  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
+}
+
+const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ user, campaigns, setCampaigns }) => {
+  // 经理看提交的，合规看经理批过的
+  const items = campaigns.filter(c => 
     (user.role === UserRole.MANAGER && c.status === CampaignStatus.SUBMITTED) ||
     (user.role === UserRole.COMPLIANCE && c.status === CampaignStatus.MANAGER_APPROVED)
-  ));
+  );
 
   const handleAction = (id: string, action: 'APPROVE' | 'REJECT') => {
-    setItems(items.filter(i => i.id !== id));
-    // In a real app, this would call an API
-    alert(`${action === 'APPROVE' ? '已通过' : '已拒绝'} 申请 #${id}`);
+    setCampaigns(prev => prev.map(c => {
+      if (c.id === id) {
+        if (action === 'REJECT') return { ...c, status: CampaignStatus.REJECTED };
+        
+        // 审批状态流转
+        if (user.role === UserRole.MANAGER) return { ...c, status: CampaignStatus.MANAGER_APPROVED };
+        if (user.role === UserRole.COMPLIANCE) return { ...c, status: CampaignStatus.COMPLIANCE_APPROVED };
+      }
+      return c;
+    }));
   };
 
   if (items.length === 0) {
@@ -23,7 +36,9 @@ const ApprovalWorkflow: React.FC<{ user: any }> = ({ user }) => {
           <CheckCircle size={40} />
         </div>
         <h3 className="text-xl font-bold text-slate-800">暂无待审批项</h3>
-        <p className="text-slate-500 mt-2">所有的活动申请都已处理完毕，保持高效！</p>
+        <p className="text-slate-500 mt-2">
+          {user.role === UserRole.MANAGER ? "目前没有需要您审批的新活动申请。" : "所有经经理审批的项目已处理。"}
+        </p>
       </div>
     );
   }
@@ -35,14 +50,14 @@ const ApprovalWorkflow: React.FC<{ user: any }> = ({ user }) => {
           <ShieldCheck size={28} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">审批中心</h2>
+          <h2 className="text-2xl font-bold text-slate-800">审批中心 ({user.role})</h2>
           <p className="text-slate-500">待您审核的市场活动及异常申请</p>
         </div>
       </div>
 
       <div className="space-y-4">
         {items.map(item => (
-          <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row gap-6 items-start md:items-center">
+          <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row gap-6 items-start md:items-center animate-in fade-in slide-in-from-bottom-4">
             <div className="flex-1 space-y-2">
               <div className="flex items-center space-x-2">
                 <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">

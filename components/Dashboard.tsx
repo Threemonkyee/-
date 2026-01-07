@@ -10,18 +10,15 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
   LineChart, 
   Line,
-  Cell
+  XAxis,
+  YAxis
 } from 'recharts';
-import { User, UserRole } from '../types';
+import { User, Campaign, Opportunity } from '../types';
 import { MOCK_HCPS, COLORS } from '../constants';
 
 const data = [
@@ -50,7 +47,7 @@ const StatCard: React.FC<{ title: string; value: string; trend: string; isUp: bo
   </div>
 );
 
-const Dashboard: React.FC<{ user: User }> = ({ user }) => {
+const Dashboard: React.FC<{ user: User; campaigns: Campaign[]; opportunities: Opportunity[] }> = ({ user, campaigns, opportunities }) => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -71,8 +68,8 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="负责HCP总数" value="128" trend="+12.5%" isUp={true} icon={Users} color="bg-blue-600" />
         <StatCard title="月销售额 (CNY)" value="￥458.2k" trend="+8.2%" isUp={true} icon={TrendingUp} color="bg-emerald-600" />
-        <StatCard title="活动申请数" value="12" trend="-2.4%" isUp={false} icon={Target} color="bg-orange-600" />
-        <StatCard title="待办拜访" value="8" trend="+4" isUp={true} icon={Calendar} color="bg-violet-600" />
+        <StatCard title="活动总数" value={campaigns.length.toString()} trend="当前" isUp={true} icon={Target} color="bg-orange-600" />
+        <StatCard title="销售机会" value={opportunities.length.toString()} trend="+4" isUp={true} icon={Calendar} color="bg-violet-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -90,9 +87,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                 <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
                 <Line type="monotone" dataKey="visits" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
               </LineChart>
@@ -105,7 +100,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           <div className="space-y-4">
             {MOCK_HCPS.slice(0, 5).map((hcp, idx) => (
               <div key={hcp.id} className="flex items-center space-x-4 p-3 hover:bg-slate-50 rounded-xl transition-colors group cursor-pointer">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm`} style={{ backgroundColor: COLORS[idx] }}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm`} style={{ backgroundColor: COLORS[idx % COLORS.length] }}>
                   {hcp.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">

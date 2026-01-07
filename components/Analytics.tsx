@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   BarChart as ReBarChart, 
   Bar, 
@@ -13,15 +13,9 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
-import { FileDown, Filter, LayoutGrid } from 'lucide-react';
+import { FileDown, Filter } from 'lucide-react';
 import { COLORS } from '../constants';
-
-const categoryData = [
-  { name: '学术交流', value: 45 },
-  { name: '圆桌会议', value: 25 },
-  { name: '科室推广', value: 20 },
-  { name: '公益捐赠', value: 10 },
-];
+import { Campaign, CampaignStatus } from '../types';
 
 const roiData = [
   { region: '华东', investment: 400, return: 2400 },
@@ -31,7 +25,36 @@ const roiData = [
   { region: '西北', investment: 189, return: 4800 },
 ];
 
-const Analytics: React.FC<{ user: any }> = ({ user }) => {
+const Analytics: React.FC<{ user: any; campaigns: Campaign[] }> = ({ user, campaigns }) => {
+  // 动态计算已通过活动的分类预算
+  const categoryStats = useMemo(() => {
+    const approved = campaigns.filter(c => c.status === CampaignStatus.COMPLIANCE_APPROVED);
+    const stats: Record<string, number> = {
+      '学术交流': 0,
+      '圆桌讨论': 0,
+      '科室推广': 0,
+      '其他': 0
+    };
+    approved.forEach(c => {
+      if (stats[c.type] !== undefined) stats[c.type] += c.budget;
+      else stats['其他'] += c.budget;
+    });
+    return Object.entries(stats).map(([name, value]) => ({ name, value }));
+  }, [campaigns]);
+
+  const totalApprovedBudget = useMemo(() => {
+    return campaigns
+      .filter(c => c.status === CampaignStatus.COMPLIANCE_APPROVED)
+      .reduce((sum, c) => sum + c.budget, 0);
+  }, [campaigns]);
+
+  const complianceRate = useMemo(() => {
+    const total = campaigns.length;
+    if (total === 0) return '100%';
+    const rejected = campaigns.filter(c => c.status === CampaignStatus.REJECTED).length;
+    return `${(((total - rejected) / total) * 100).toFixed(1)}%`;
+  }, [campaigns]);
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -52,12 +75,12 @@ const Analytics: React.FC<{ user: any }> = ({ user }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">预算分配比例</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-6">已通过预算分布 (实时)</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={categoryStats}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -65,7 +88,7 @@ const Analytics: React.FC<{ user: any }> = ({ user }) => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {categoryData.map((entry, index) => (
+                  {categoryStats.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -74,6 +97,7 @@ const Analytics: React.FC<{ user: any }> = ({ user }) => {
               </PieChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-center text-xs text-slate-400 mt-2">* 仅统计合规已过通过的项目</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -98,8 +122,8 @@ const Analytics: React.FC<{ user: any }> = ({ user }) => {
         <h3 className="text-lg font-bold text-slate-800 mb-6">关键绩效指标 (KPIs)</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: '平均客单价', value: '￥12,400', color: 'text-blue-600' },
-            { label: '活动合规通过率', value: '98.5%', color: 'text-emerald-600' },
+            { label: '已批总预算', value: `￥${(totalApprovedBudget / 1000).toFixed(1)}k`, color: 'text-blue-600' },
+            { label: '活动合规率', value: complianceRate, color: 'text-emerald-600' },
             { label: '高潜力HCP覆盖率', value: '82%', color: 'text-violet-600' },
             { label: '线索转化周期', value: '45天', color: 'text-orange-600' },
           ].map((kpi, idx) => (

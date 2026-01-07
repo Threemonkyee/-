@@ -22,21 +22,23 @@ import SalesTracking from './components/SalesTracking';
 import Analytics from './components/Analytics';
 import ApprovalWorkflow from './components/ApprovalWorkflow';
 import UserSwitch from './components/UserSwitch';
-import { User, UserRole } from './types';
-import { MOCK_USERS } from './constants';
+import { User, UserRole, Campaign, Opportunity } from './types';
+import { MOCK_USERS, MOCK_CAMPAIGNS, MOCK_OPPORTUNITIES } from './constants';
 
 const SidebarItem: React.FC<{ to: string; icon: React.ElementType; label: string; active: boolean; onClick?: () => void }> = ({ to, icon: Icon, label, active, onClick }) => (
   <Link
     to={to}
     onClick={onClick}
-    className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+    className={`group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
       active 
         ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
         : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600'
     }`}
   >
-    <Icon size={20} className={active ? 'text-white' : 'group-hover:text-blue-600'} />
-    <span className="font-semibold text-sm md:text-base">{label}</span>
+    <Icon size={20} className={active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'} />
+    <span className={`font-semibold ${active ? 'text-white' : 'text-slate-600 group-hover:text-blue-600'} text-sm md:text-base whitespace-nowrap`}>
+      {label}
+    </span>
   </Link>
 );
 
@@ -46,7 +48,6 @@ const Navigation: React.FC<{ currentUser: User; isSidebarOpen: boolean; setIsSid
 
   return (
     <>
-      {/* 移动端遮罩层 */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
@@ -54,7 +55,6 @@ const Navigation: React.FC<{ currentUser: User; isSidebarOpen: boolean; setIsSid
         />
       )}
 
-      {/* Sidebar */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-72 md:w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -68,22 +68,18 @@ const Navigation: React.FC<{ currentUser: User; isSidebarOpen: boolean; setIsSid
               </div>
               <span className="text-xl font-bold text-slate-800 tracking-tight">PharmaFlow</span>
             </div>
-            {/* 移动端专用关闭按钮 */}
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-2 text-slate-400 hover:text-slate-600 md:hidden"
-            >
-              <X size={20} />
+            <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 md:hidden">
+              <X size={24} />
             </button>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1 md:space-y-2 overflow-y-auto pt-2">
+          <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
             <SidebarItem to="/" icon={LayoutDashboard} label="数据大屏" active={currentPath === '/'} onClick={() => setIsSidebarOpen(false)} />
             <SidebarItem to="/hcp" icon={Users} label="客户管理" active={currentPath === '/hcp'} onClick={() => setIsSidebarOpen(false)} />
             <SidebarItem to="/campaign" icon={Megaphone} label="市场活动" active={currentPath === '/campaign'} onClick={() => setIsSidebarOpen(false)} />
             <SidebarItem to="/sales" icon={TrendingUp} label="销售机会" active={currentPath === '/sales'} onClick={() => setIsSidebarOpen(false)} />
             
-            {(currentUser.role === UserRole.MANAGER || currentUser.role === UserRole.COMPLIANCE || currentUser.role === UserRole.ADMIN) && (
+            {(currentUser.role !== UserRole.REP) && (
               <SidebarItem to="/approvals" icon={ShieldCheck} label="审批中心" active={currentPath === '/approvals'} onClick={() => setIsSidebarOpen(false)} />
             )}
             
@@ -111,28 +107,25 @@ const Navigation: React.FC<{ currentUser: User; isSidebarOpen: boolean; setIsSid
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 默认收起移动端菜单
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(MOCK_OPPORTUNITIES);
 
   return (
     <HashRouter>
       <div className="flex h-screen overflow-hidden bg-slate-50">
         <Navigation currentUser={currentUser} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-          {/* Header */}
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0">
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 rounded-lg hover:bg-slate-100 md:hidden text-slate-600"
-              >
-                <Menu size={22} />
+              <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg hover:bg-slate-100 md:hidden text-slate-600">
+                <Menu size={24} />
               </button>
               <h1 className="text-lg font-bold text-slate-800 hidden md:block">
-                欢迎回来, <span className="text-blue-600">{currentUser.name}</span>
+                你好, <span className="text-blue-600">{currentUser.name}</span>
               </h1>
-              <h1 className="text-lg font-bold text-slate-800 md:hidden truncate max-w-[120px]">
+              <h1 className="text-base font-bold text-slate-800 md:hidden truncate max-w-[100px]">
                 {currentUser.name}
               </h1>
             </div>
@@ -146,20 +139,19 @@ const App: React.FC = () => {
               <div className="h-6 w-px bg-slate-200 mx-1 md:mx-2"></div>
               <button className="flex items-center space-x-1.5 text-slate-500 hover:text-red-600 transition-colors">
                 <LogOut size={18} />
-                <span className="hidden lg:inline font-bold text-xs uppercase tracking-wider">注销</span>
+                <span className="hidden lg:inline font-bold text-xs uppercase tracking-wider">退出</span>
               </button>
             </div>
           </header>
 
-          {/* Page Body */}
           <main className="flex-1 overflow-y-auto p-4 md:p-8">
             <Routes>
-              <Route path="/" element={<Dashboard user={currentUser} />} />
+              <Route path="/" element={<Dashboard user={currentUser} campaigns={campaigns} opportunities={opportunities} />} />
               <Route path="/hcp" element={<HCPManagement user={currentUser} />} />
-              <Route path="/campaign" element={<CampaignManagement user={currentUser} />} />
-              <Route path="/sales" element={<SalesTracking user={currentUser} />} />
-              <Route path="/analytics" element={<Analytics user={currentUser} />} />
-              <Route path="/approvals" element={<ApprovalWorkflow user={currentUser} />} />
+              <Route path="/campaign" element={<CampaignManagement user={currentUser} campaigns={campaigns} setCampaigns={setCampaigns} />} />
+              <Route path="/sales" element={<SalesTracking user={currentUser} opportunities={opportunities} setOpportunities={setOpportunities} />} />
+              <Route path="/analytics" element={<Analytics user={currentUser} campaigns={campaigns} />} />
+              <Route path="/approvals" element={<ApprovalWorkflow user={currentUser} campaigns={campaigns} setCampaigns={setCampaigns} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
