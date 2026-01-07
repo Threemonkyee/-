@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Search, Plus, Filter, MoreVertical, MapPin, Building2, Stethoscope } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, MapPin, Building2, Stethoscope, TrendingUp } from 'lucide-react';
 import { HCP, HCPLevel } from '../types';
-import { MOCK_HCPS } from '../constants';
+import { MOCK_HCPS, MOCK_OPPORTUNITIES } from '../constants';
 
 const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,12 +14,17 @@ const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
     return matchesSearch && matchesFilter;
   });
 
+  // 检查医生是否有进行中的销售机会
+  const getOpportunityCount = (hcpId: string) => {
+    return MOCK_OPPORTUNITIES.filter(o => o.hcpId === hcpId && o.stage !== '成交').length;
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">客户管理 (HCP)</h2>
-          <p className="text-slate-500">管理您的医生与医疗机构关系</p>
+          <p className="text-slate-500">管理您的医生与医疗机构关系，从画像到机会转化</p>
         </div>
         <button className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-blue-200 flex items-center space-x-2 hover:bg-blue-700 transition-all">
           <Plus size={20} />
@@ -63,58 +68,65 @@ const HCPManagement: React.FC<{ user: any }> = ({ user }) => {
                 <th className="px-6 py-4">HCP 姓名</th>
                 <th className="px-6 py-4">执业地点</th>
                 <th className="px-6 py-4">分级</th>
-                <th className="px-6 py-4">区域</th>
+                <th className="px-6 py-4">机会追踪</th>
                 <th className="px-6 py-4">最后拜访</th>
                 <th className="px-6 py-4 text-right">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredHCPS.map((hcp) => (
-                <tr key={hcp.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-                        {hcp.name[0]}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">{hcp.name}</p>
-                        <div className="flex items-center text-xs text-slate-500 mt-0.5">
-                          <Stethoscope size={12} className="mr-1" />
-                          {hcp.department}
+              {filteredHCPS.map((hcp) => {
+                const optCount = getOpportunityCount(hcp.id);
+                return (
+                  <tr key={hcp.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                          {hcp.name[0]}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800">{hcp.name}</p>
+                          <div className="flex items-center text-xs text-slate-500 mt-0.5">
+                            <Stethoscope size={12} className="mr-1" />
+                            {hcp.department}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-slate-600">
-                      <Building2 size={16} className="mr-2 text-slate-400" />
-                      <span className="text-sm font-medium">{hcp.hospital}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      hcp.level === 'A' ? 'bg-red-50 text-red-600' : 
-                      hcp.level === 'B' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {hcp.level} 级
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-slate-500 text-sm">
-                      <MapPin size={14} className="mr-1" />
-                      {hcp.region}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-slate-600">{hcp.lastVisit}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                      <MoreVertical size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center text-slate-600">
+                        <Building2 size={16} className="mr-2 text-slate-400" />
+                        <span className="text-sm font-medium">{hcp.hospital}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        hcp.level === 'A' ? 'bg-red-50 text-red-600' : 
+                        hcp.level === 'B' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {hcp.level} 级
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {optCount > 0 ? (
+                        <div className="flex items-center text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-lg w-fit">
+                          <TrendingUp size={12} className="mr-1" />
+                          {optCount} 个活跃机会
+                        </div>
+                      ) : (
+                        <span className="text-slate-300 text-xs">暂无机会</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-slate-600">{hcp.lastVisit}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                        <MoreVertical size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

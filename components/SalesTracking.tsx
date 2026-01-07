@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Kanban, List, Filter, Search, TrendingUp, MoreHorizontal, Calendar, XCircle, UserPlus } from 'lucide-react';
+import { Kanban, List, Filter, Search, TrendingUp, MoreHorizontal, Calendar, XCircle, UserPlus, Award } from 'lucide-react';
 import { MOCK_OPPORTUNITIES, MOCK_HCPS } from '../constants';
 import { Opportunity } from '../types';
 
@@ -34,6 +34,11 @@ const SalesTracking: React.FC<{ user: any }> = ({ user }) => {
     setOpportunities([...opportunities, opportunity]);
     setShowModal(false);
     setNewOpt({ hcpId: '', value: '', stage: '潜在', probability: 30 });
+  };
+
+  const getHCPLevel = (hcpId: string) => {
+    const hcp = MOCK_HCPS.find(h => h.id === hcpId);
+    return hcp ? hcp.level : 'C';
   };
 
   return (
@@ -75,7 +80,12 @@ const SalesTracking: React.FC<{ user: any }> = ({ user }) => {
               {opportunities.filter(o => o.stage === stage).map(opt => (
                 <div key={opt.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all cursor-pointer group">
                   <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{opt.hcpName}</h5>
+                    <div className="flex items-center space-x-2">
+                      <h5 className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{opt.hcpName}</h5>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${getHCPLevel(opt.hcpId) === 'A' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {getHCPLevel(opt.hcpId)}
+                      </span>
+                    </div>
                     <span className="text-blue-600 text-xs font-bold">￥{(opt.value/1000).toFixed(0)}k</span>
                   </div>
                   <div className="flex items-center text-xs text-slate-500 space-x-3 mb-4">
